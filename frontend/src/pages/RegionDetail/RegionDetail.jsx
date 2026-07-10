@@ -10,15 +10,21 @@ import {
   FaTimes,
 } from "react-icons/fa";
 
+import { ServerLoader } from "../../components/ServerLoader/ServerLoader";
+
 import { useLanguage } from "../../context/LanguageContext";
 import { translations } from "../../i18n";
 
 import "./RegionDetail.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3010";
-const DDRAGON_VERSION = import.meta.env.VITE_DDRAGON_VERSION || "15.24.1";
-console.log("DDRAGON_VERSION:", DDRAGON_VERSION);
-const PLACEHOLDER_IMG = "https://static.thenounproject.com/png/104062-200.png";
+const API_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:3010";
+
+const DDRAGON_VERSION =
+  import.meta.env.VITE_DDRAGON_VERSION || "15.24.1";
+
+const PLACEHOLDER_IMG =
+  "https://static.thenounproject.com/png/104062-200.png";
 
 function normalizeRegion(data) {
   return data?.data || data?.region || data;
@@ -53,7 +59,9 @@ function normalizeChampionId(name) {
     "Xin Zhao": "XinZhao",
   };
 
-  if (specialCases[raw]) return specialCases[raw];
+  if (specialCases[raw]) {
+    return specialCases[raw];
+  }
 
   return raw
     .replace(/['’.\s]/g, "")
@@ -87,7 +95,8 @@ export default function RegionDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [selectedImageIndex, setSelectedImageIndex] = useState(null);
+  const [selectedImageIndex, setSelectedImageIndex] =
+    useState(null);
 
   const galleryItems = useMemo(
     () => flattenGallery(region?.sections),
@@ -95,30 +104,52 @@ export default function RegionDetail() {
   );
 
   const selectedEntry =
-    selectedImageIndex !== null ? galleryItems[selectedImageIndex] : null;
+    selectedImageIndex !== null
+      ? galleryItems[selectedImageIndex]
+      : null;
 
-  const closeGallery = () => setSelectedImageIndex(null);
+  function closeGallery() {
+    setSelectedImageIndex(null);
+  }
 
-  const goToPreviousImage = () => {
-    if (!galleryItems.length || selectedImageIndex === null) return;
+  function goToPreviousImage() {
+    if (
+      !galleryItems.length ||
+      selectedImageIndex === null
+    ) {
+      return;
+    }
 
     setSelectedImageIndex((current) =>
-      current === 0 ? galleryItems.length - 1 : current - 1
+      current === 0
+        ? galleryItems.length - 1
+        : current - 1
     );
-  };
+  }
 
-  const goToNextImage = () => {
-    if (!galleryItems.length || selectedImageIndex === null) return;
+  function goToNextImage() {
+    if (
+      !galleryItems.length ||
+      selectedImageIndex === null
+    ) {
+      return;
+    }
 
     setSelectedImageIndex((current) =>
-      current === galleryItems.length - 1 ? 0 : current + 1
+      current === galleryItems.length - 1
+        ? 0
+        : current + 1
     );
-  };
+  }
 
   useEffect(() => {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+        window.scrollTo({
+          top: 0,
+          left: 0,
+          behavior: "auto",
+        });
       });
     });
   }, [id, language]);
@@ -132,21 +163,35 @@ export default function RegionDetail() {
         setLoading(true);
         setError("");
 
-        const response = await fetch(`${API_URL}/api/v1/regions/${id}?lang=${apiLang}`, {
-          signal: controller.signal,
-          headers: { "Accept-Language": apiLang },
-        });
+        const response = await fetch(
+          `${API_URL}/api/v1/regions/${id}?lang=${apiLang}`,
+          {
+            signal: controller.signal,
+            headers: {
+              "Accept-Language": apiLang,
+            },
+          }
+        );
 
-        if (!response.ok) throw new Error("Fetch failed");
+        if (!response.ok) {
+          throw new Error("Fetch failed");
+        }
 
         const data = await response.json();
 
-        if (!alive) return;
+        if (!alive) {
+          return;
+        }
 
         setRegion(normalizeRegion(data));
       } catch (error) {
-        if (error.name === "AbortError") return;
-        if (!alive) return;
+        if (error.name === "AbortError") {
+          return;
+        }
+
+        if (!alive) {
+          return;
+        }
 
         setRegion(null);
         setError(t.error);
@@ -166,30 +211,61 @@ export default function RegionDetail() {
   }, [id, apiLang, t.error]);
 
   useEffect(() => {
-    if (selectedImageIndex === null) return;
+    if (selectedImageIndex === null) {
+      return;
+    }
 
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape") closeGallery();
-      if (event.key === "ArrowLeft") goToPreviousImage();
-      if (event.key === "ArrowRight") goToNextImage();
-    };
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        closeGallery();
+      }
+
+      if (event.key === "ArrowLeft") {
+        goToPreviousImage();
+      }
+
+      if (event.key === "ArrowRight") {
+        goToNextImage();
+      }
+    }
 
     window.addEventListener("keydown", handleKeyDown);
     document.body.classList.add("rd-modal-open");
 
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      document.body.classList.remove("rd-modal-open");
+      window.removeEventListener(
+        "keydown",
+        handleKeyDown
+      );
+
+      document.body.classList.remove(
+        "rd-modal-open"
+      );
     };
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedImageIndex, galleryItems.length]);
 
   if (loading) {
-    return <main className="rd-state">{t.loading}</main>;
+    return (
+      <main className="rd-state">
+        <ServerLoader
+          resource={
+            language === "EN"
+              ? "region details"
+              : "detalles de la región"
+          }
+        />
+      </main>
+    );
   }
 
   if (error || !region) {
-    return <main className="rd-state rd-state--error">{error || t.error}</main>;
+    return (
+      <main className="rd-state rd-state--error">
+        {error || t.error}
+      </main>
+    );
   }
 
   const {
@@ -216,7 +292,12 @@ export default function RegionDetail() {
           aria-label={selectedEntry.title}
           onClick={closeGallery}
         >
-          <div className="rd-modal__inner" onClick={(event) => event.stopPropagation()}>
+          <div
+            className="rd-modal__inner"
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+          >
             <button
               className="rd-modal__close"
               type="button"
@@ -250,22 +331,36 @@ export default function RegionDetail() {
             <div className="rd-modal__imageBox">
               <img
                 className="rd-modal__image"
-                src={selectedEntry.imageUrl || PLACEHOLDER_IMG}
+                src={
+                  selectedEntry.imageUrl ||
+                  PLACEHOLDER_IMG
+                }
                 alt={selectedEntry.title}
                 loading="eager"
                 decoding="async"
                 onError={(event) => {
-                  event.currentTarget.src = PLACEHOLDER_IMG;
+                  event.currentTarget.src =
+                    PLACEHOLDER_IMG;
                 }}
               />
             </div>
 
             <footer className="rd-modal__caption">
-              <span className="rd-modal__section">{selectedEntry.sectionTitle}</span>
-              <h3 className="rd-modal__title">{selectedEntry.title}</h3>
-              <p className="rd-modal__text">{selectedEntry.text}</p>
+              <span className="rd-modal__section">
+                {selectedEntry.sectionTitle}
+              </span>
+
+              <h3 className="rd-modal__title">
+                {selectedEntry.title}
+              </h3>
+
+              <p className="rd-modal__text">
+                {selectedEntry.text}
+              </p>
+
               <span className="rd-modal__count">
-                {selectedImageIndex + 1}/{galleryItems.length}
+                {selectedImageIndex + 1}/
+                {galleryItems.length}
               </span>
             </footer>
           </div>
@@ -281,7 +376,8 @@ export default function RegionDetail() {
             loading="eager"
             decoding="async"
             onError={(event) => {
-              event.currentTarget.src = PLACEHOLDER_IMG;
+              event.currentTarget.src =
+                PLACEHOLDER_IMG;
             }}
           />
 
@@ -289,22 +385,41 @@ export default function RegionDetail() {
 
           <div className="rd__heroContent">
             <div className="rd__heroText">
-              <span className="rd__kicker">{t.region}</span>
-              <h1 className="rd__title">{name}</h1>
+              <span className="rd__kicker">
+                {t.region}
+              </span>
 
-              {title && <p className="rd__subtitle">{title}</p>}
-              {summary && <p className="rd__intro">{summary}</p>}
+              <h1 className="rd__title">
+                {name}
+              </h1>
+
+              {title && (
+                <p className="rd__subtitle">
+                  {title}
+                </p>
+              )}
+
+              {summary && (
+                <p className="rd__intro">
+                  {summary}
+                </p>
+              )}
             </div>
 
             <div className="rd__crestBox">
               <img
                 className="rd__crest"
-                src={crestUrl || iconUrl || PLACEHOLDER_IMG}
+                src={
+                  crestUrl ||
+                  iconUrl ||
+                  PLACEHOLDER_IMG
+                }
                 alt={`${name} ${t.crestAlt}`}
                 loading="eager"
                 decoding="async"
                 onError={(event) => {
-                  event.currentTarget.src = PLACEHOLDER_IMG;
+                  event.currentTarget.src =
+                    PLACEHOLDER_IMG;
                 }}
               />
             </div>
@@ -314,23 +429,38 @@ export default function RegionDetail() {
         <section className="rd__loreBlock">
           {summary && (
             <article className="rd__loreCard rd__loreCard--main">
-              <h2 className="rd__sectionTitle">{t.summary}</h2>
-              <p className="rd__text rd__text--lead">{summary}</p>
+              <h2 className="rd__sectionTitle">
+                {t.summary}
+              </h2>
+
+              <p className="rd__text rd__text--lead">
+                {summary}
+              </p>
             </article>
           )}
 
           <div className="rd__loreColumns">
             {description && (
               <article className="rd__loreCard">
-                <h2 className="rd__sectionTitle">{t.history}</h2>
-                <p className="rd__text">{description}</p>
+                <h2 className="rd__sectionTitle">
+                  {t.history}
+                </h2>
+
+                <p className="rd__text">
+                  {description}
+                </p>
               </article>
             )}
 
             {culture && (
               <article className="rd__loreCard">
-                <h2 className="rd__sectionTitle">{t.culture}</h2>
-                <p className="rd__text">{culture}</p>
+                <h2 className="rd__sectionTitle">
+                  {t.culture}
+                </h2>
+
+                <p className="rd__text">
+                  {culture}
+                </p>
               </article>
             )}
           </div>
@@ -339,12 +469,15 @@ export default function RegionDetail() {
         {champions.length > 0 && (
           <section className="rd__championsBlock">
             <div className="rd__blockHead">
-              <h2 className="rd__sectionTitle">{t.champions}</h2>
+              <h2 className="rd__sectionTitle">
+                {t.champions}
+              </h2>
             </div>
 
             <div className="rd__championsList">
               {champions.map((champion) => {
-                const championId = normalizeChampionId(champion);
+                const championId =
+                  normalizeChampionId(champion);
 
                 return (
                   <Link
@@ -361,12 +494,15 @@ export default function RegionDetail() {
                         loading="lazy"
                         decoding="async"
                         onError={(event) => {
-                          event.currentTarget.src = PLACEHOLDER_IMG;
+                          event.currentTarget.src =
+                            PLACEHOLDER_IMG;
                         }}
                       />
                     </span>
 
-                    <span className="rd__championName">{champion}</span>
+                    <span className="rd__championName">
+                      {champion}
+                    </span>
                   </Link>
                 );
               })}
@@ -376,60 +512,86 @@ export default function RegionDetail() {
 
         <section className="rd__galleryBlock">
           <div className="rd__blockHead">
-            <h2 className="rd__sectionTitle">{t.gallery}</h2>
+            <h2 className="rd__sectionTitle">
+              {t.gallery}
+            </h2>
           </div>
 
           {sections.length ? (
             <div className="rd__sections">
               {sections.map((section) => (
-                <article className="rd__regionSection" key={section.title}>
+                <article
+                  className="rd__regionSection"
+                  key={section.title}
+                >
                   <header className="rd__regionSectionHead">
-                    <h3 className="rd__regionSectionTitle">{section.title}</h3>
+                    <h3 className="rd__regionSectionTitle">
+                      {section.title}
+                    </h3>
                   </header>
 
                   <div className="rd__entryGrid">
-                    {safeArr(section.entries).map((entry, index) => {
-                      const globalIndex = galleryItems.findIndex(
-                        (item) =>
-                          item.sectionTitle === section.title &&
-                          item.title === entry.title &&
-                          item.imageUrl === entry.imageUrl
-                      );
+                    {safeArr(section.entries).map(
+                      (entry, index) => {
+                        const globalIndex =
+                          galleryItems.findIndex(
+                            (item) =>
+                              item.sectionTitle ===
+                                section.title &&
+                              item.title ===
+                                entry.title &&
+                              item.imageUrl ===
+                                entry.imageUrl
+                          );
 
-                      return (
-                        <article
-                          className="rd__entryCard"
-                          key={`${section.title}-${entry.title}-${index}`}
-                        >
-                          <button
-                            className="rd__entryImageButton"
-                            type="button"
-                            onClick={() => setSelectedImageIndex(globalIndex)}
-                            aria-label={`${t.expand}: ${entry.title}`}
+                        return (
+                          <article
+                            className="rd__entryCard"
+                            key={`${section.title}-${entry.title}-${index}`}
                           >
-                            <img
-                              className="rd__entryImage"
-                              src={entry.imageUrl || PLACEHOLDER_IMG}
-                              alt={entry.title}
-                              loading="lazy"
-                              decoding="async"
-                              onError={(event) => {
-                                event.currentTarget.src = PLACEHOLDER_IMG;
-                              }}
-                            />
+                            <button
+                              className="rd__entryImageButton"
+                              type="button"
+                              onClick={() =>
+                                setSelectedImageIndex(
+                                  globalIndex
+                                )
+                              }
+                              aria-label={`${t.expand}: ${entry.title}`}
+                            >
+                              <img
+                                className="rd__entryImage"
+                                src={
+                                  entry.imageUrl ||
+                                  PLACEHOLDER_IMG
+                                }
+                                alt={entry.title}
+                                loading="lazy"
+                                decoding="async"
+                                onError={(event) => {
+                                  event.currentTarget.src =
+                                    PLACEHOLDER_IMG;
+                                }}
+                              />
 
-                            <span className="rd__entryExpand">
-                              <FaExpandAlt />
-                            </span>
-                          </button>
+                              <span className="rd__entryExpand">
+                                <FaExpandAlt />
+                              </span>
+                            </button>
 
-                          <div className="rd__entryBody">
-                            <h4 className="rd__entryTitle">{entry.title}</h4>
-                            <p className="rd__entryText">{entry.text}</p>
-                          </div>
-                        </article>
-                      );
-                    })}
+                            <div className="rd__entryBody">
+                              <h4 className="rd__entryTitle">
+                                {entry.title}
+                              </h4>
+
+                              <p className="rd__entryText">
+                                {entry.text}
+                              </p>
+                            </div>
+                          </article>
+                        );
+                      }
+                    )}
                   </div>
                 </article>
               ))}

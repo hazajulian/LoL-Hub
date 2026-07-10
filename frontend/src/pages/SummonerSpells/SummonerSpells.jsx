@@ -5,6 +5,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { HiOutlineClock, HiSparkles } from "react-icons/hi2";
 
 import { SearchBar } from "../../components/SearchBar/SearchBar";
+import { ServerLoader } from "../../components/ServerLoader/ServerLoader";
+
 import { useLanguage } from "../../context/LanguageContext";
 import { translations } from "../../i18n";
 import { getSummonerSpells } from "../../services/api";
@@ -61,7 +63,9 @@ function normalizeText(value) {
 }
 
 function cleanDescription(text) {
-  if (!text) return "-";
+  if (!text) {
+    return "-";
+  }
 
   return String(text)
     .replace(/<br\s*\/?>/gi, " ")
@@ -71,35 +75,60 @@ function cleanDescription(text) {
 }
 
 function getCooldownValue(spell) {
-  const raw = spell?.cooldownBurn || safeArray(spell?.cooldown)[0] || "0";
+  const raw =
+    spell?.cooldownBurn ||
+    safeArray(spell?.cooldown)[0] ||
+    "0";
+
   const parsed = Number.parseFloat(raw);
 
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function getCooldownText(spell) {
-  const raw = spell?.cooldownBurn || safeArray(spell?.cooldown)[0];
+  const raw =
+    spell?.cooldownBurn ||
+    safeArray(spell?.cooldown)[0];
 
-  if (raw === undefined || raw === null || raw === "") return "-";
+  if (
+    raw === undefined ||
+    raw === null ||
+    raw === ""
+  ) {
+    return "-";
+  }
 
   return `${raw}s`;
 }
 
 function getSpellCategory(spell) {
-  if (STANDARD_SPELL_IDS.includes(spell?.spellId)) return "standard";
+  if (STANDARD_SPELL_IDS.includes(spell?.spellId)) {
+    return "standard";
+  }
 
   const modes = safeArray(spell?.modes);
 
-  if (modes.includes("CHERRY")) return "arena";
-  if (modes.includes("ULTBOOK")) return "ultimate";
-  if (modes.includes("KINGPORO")) return "poro";
+  if (modes.includes("CHERRY")) {
+    return "arena";
+  }
+
+  if (modes.includes("ULTBOOK")) {
+    return "ultimate";
+  }
+
+  if (modes.includes("KINGPORO")) {
+    return "poro";
+  }
 
   return "special";
 }
 
 function getVisibleModes(modes = []) {
   const cleanModes = safeArray(modes);
-  const important = IMPORTANT_MODES.filter((mode) => cleanModes.includes(mode));
+
+  const important = IMPORTANT_MODES.filter((mode) =>
+    cleanModes.includes(mode)
+  );
 
   const extra = cleanModes
     .filter((mode) => !IMPORTANT_MODES.includes(mode))
@@ -116,7 +145,9 @@ function sortSpells(list, sortValue) {
 
   sorted.sort((a, b) => {
     if (sortValue === "name-desc") {
-      return String(b.name || "").localeCompare(String(a.name || ""));
+      return String(b.name || "").localeCompare(
+        String(a.name || "")
+      );
     }
 
     if (sortValue === "cooldown-asc") {
@@ -127,14 +158,20 @@ function sortSpells(list, sortValue) {
       return getCooldownValue(b) - getCooldownValue(a);
     }
 
-    return String(a.name || "").localeCompare(String(b.name || ""));
+    return String(a.name || "").localeCompare(
+      String(b.name || "")
+    );
   });
 
   return sorted;
 }
 
 function getCategoryLabel(category, t) {
-  return t.categories?.[category] || t.categories?.special || category;
+  return (
+    t.categories?.[category] ||
+    t.categories?.special ||
+    category
+  );
 }
 
 function SpellCard({ spell, t }) {
@@ -145,7 +182,9 @@ function SpellCard({ spell, t }) {
   const modes = getVisibleModes(spell?.modes);
 
   return (
-    <article className={`summoner__card summoner__card--${category}`}>
+    <article
+      className={`summoner__card summoner__card--${category}`}
+    >
       <header className="summoner__cardHeader">
         <div className="summoner__iconFrame">
           <img
@@ -159,36 +198,56 @@ function SpellCard({ spell, t }) {
 
         <div className="summoner__titleBox">
           <div className="summoner__titleTop">
-            <h3 className="summoner__name">{spell?.name || "-"}</h3>
+            <h3 className="summoner__name">
+              {spell?.name || "-"}
+            </h3>
 
-            <span className={`summoner__category summoner__category--${category}`}>
+            <span
+              className={`summoner__category summoner__category--${category}`}
+            >
               {categoryLabel}
             </span>
           </div>
 
-          <span className="summoner__spellId">{spell?.spellId || "-"}</span>
+          <span className="summoner__spellId">
+            {spell?.spellId || "-"}
+          </span>
         </div>
       </header>
 
       <div className="summoner__meta">
         <div className="summoner__metaBox">
-          <span className="summoner__metaIconBox" aria-hidden="true">
+          <span
+            className="summoner__metaIconBox"
+            aria-hidden="true"
+          >
             <HiOutlineClock className="summoner__metaIcon" />
           </span>
 
           <div className="summoner__metaText">
-            <span className="summoner__metaLabel">{t.cooldown}</span>
-            <strong className="summoner__metaValue">{cooldown}</strong>
+            <span className="summoner__metaLabel">
+              {t.cooldown}
+            </span>
+
+            <strong className="summoner__metaValue">
+              {cooldown}
+            </strong>
           </div>
         </div>
 
         <div className="summoner__metaBox">
-          <span className="summoner__metaIconBox" aria-hidden="true">
+          <span
+            className="summoner__metaIconBox"
+            aria-hidden="true"
+          >
             <HiSparkles className="summoner__metaIcon" />
           </span>
 
           <div className="summoner__metaText">
-            <span className="summoner__metaLabel">{t.modes}</span>
+            <span className="summoner__metaLabel">
+              {t.modes}
+            </span>
+
             <strong className="summoner__metaValue">
               {safeArray(spell?.modes).length}
             </strong>
@@ -196,31 +255,52 @@ function SpellCard({ spell, t }) {
         </div>
       </div>
 
-      <p className="summoner__description">{description}</p>
+      <p className="summoner__description">
+        {description}
+      </p>
 
       <div className="summoner__modes">
         {modes.length ? (
           modes.map((mode) => (
-            <span className="summoner__tag" key={`${spell?.spellId}-${mode}`}>
+            <span
+              className="summoner__tag"
+              key={`${spell?.spellId}-${mode}`}
+            >
               {mode}
             </span>
           ))
         ) : (
-          <span className="summoner__tag">{t.noModes}</span>
+          <span className="summoner__tag">
+            {t.noModes}
+          </span>
         )}
       </div>
     </article>
   );
 }
 
-function SpellSection({ title, subtitle, spells, t }) {
-  if (!spells.length) return null;
+function SpellSection({
+  title,
+  subtitle,
+  spells,
+  t,
+}) {
+  if (!spells.length) {
+    return null;
+  }
 
   return (
     <section className="summoner__section">
       <div className="summoner__sectionHead">
-        <h2 className="summoner__sectionTitle">{title}</h2>
-        {subtitle && <p className="summoner__sectionSubtitle">{subtitle}</p>}
+        <h2 className="summoner__sectionTitle">
+          {title}
+        </h2>
+
+        {subtitle && (
+          <p className="summoner__sectionSubtitle">
+            {subtitle}
+          </p>
+        )}
       </div>
 
       <div className="summoner__grid">
@@ -240,7 +320,8 @@ export default function SummonerSpells() {
   const { language } = useLanguage();
 
   const t = translations[language].summonerSpells;
-  const apiLang = language === "ES" ? "es" : "en";
+  const apiLang =
+    language === "ES" ? "es" : "en";
 
   const [spells, setSpells] = useState([]);
   const [search, setSearch] = useState("");
@@ -254,18 +335,27 @@ export default function SummonerSpells() {
       try {
         setStatus("loading");
 
-        const data = await getSummonerSpells({ lang: apiLang });
+        const data = await getSummonerSpells({
+          lang: apiLang,
+        });
 
         const list = Array.isArray(data)
           ? data
-          : data?.results || data?.spells || data?.data || [];
+          : data?.results ||
+            data?.spells ||
+            data?.data ||
+            [];
 
-        if (!mounted) return;
+        if (!mounted) {
+          return;
+        }
 
         setSpells(list);
         setStatus("success");
       } catch {
-        if (!mounted) return;
+        if (!mounted) {
+          return;
+        }
 
         setSpells([]);
         setStatus("error");
@@ -281,8 +371,13 @@ export default function SummonerSpells() {
 
   const visibleSpells = useMemo(() => {
     return spells.filter((spell) => {
-      if (!spell?.spellId) return false;
-      return !HIDDEN_SPELL_IDS.includes(spell.spellId);
+      if (!spell?.spellId) {
+        return false;
+      }
+
+      return !HIDDEN_SPELL_IDS.includes(
+        spell.spellId
+      );
     });
   }, [spells]);
 
@@ -290,15 +385,26 @@ export default function SummonerSpells() {
     const query = normalizeText(search);
 
     const filtered = visibleSpells.filter((spell) => {
-      if (!query) return true;
+      if (!query) {
+        return true;
+      }
 
       const name = normalizeText(spell?.name);
-      const description = normalizeText(spell?.description);
-      const spellId = normalizeText(spell?.spellId);
-      const category = normalizeText(
-        getCategoryLabel(getSpellCategory(spell), t)
+      const description = normalizeText(
+        spell?.description
       );
-      const modes = safeArray(spell?.modes).map(normalizeText).join(" ");
+      const spellId = normalizeText(spell?.spellId);
+
+      const category = normalizeText(
+        getCategoryLabel(
+          getSpellCategory(spell),
+          t
+        )
+      );
+
+      const modes = safeArray(spell?.modes)
+        .map(normalizeText)
+        .join(" ");
 
       return (
         name.includes(query) ||
@@ -314,13 +420,15 @@ export default function SummonerSpells() {
 
   const standardSpells = useMemo(() => {
     return filteredSpells.filter(
-      (spell) => getSpellCategory(spell) === "standard"
+      (spell) =>
+        getSpellCategory(spell) === "standard"
     );
   }, [filteredSpells]);
 
   const specialSpells = useMemo(() => {
     return filteredSpells.filter(
-      (spell) => getSpellCategory(spell) !== "standard"
+      (spell) =>
+        getSpellCategory(spell) !== "standard"
     );
   }, [filteredSpells]);
 
@@ -330,9 +438,19 @@ export default function SummonerSpells() {
         <div className="summoner__content">
           <header className="summoner__hero">
             <div className="summoner__titleRow">
-              <span className="summoner__stick" aria-hidden="true" />
-              <h1 className="summoner__title">{t.title}</h1>
-              <span className="summoner__stick" aria-hidden="true" />
+              <span
+                className="summoner__stick"
+                aria-hidden="true"
+              />
+
+              <h1 className="summoner__title">
+                {t.title}
+              </h1>
+
+              <span
+                className="summoner__stick"
+                aria-hidden="true"
+              />
             </div>
 
             <div className="summoner__searchWrap">
@@ -347,11 +465,19 @@ export default function SummonerSpells() {
               />
             </div>
 
-            <p className="summoner__subtitle">{t.subtitle}</p>
+            <p className="summoner__subtitle">
+              {t.subtitle}
+            </p>
           </header>
 
           {status === "loading" && (
-            <p className="summoner__status">{t.loading}</p>
+            <ServerLoader
+              resource={
+                language === "EN"
+                  ? "summoner spells"
+                  : "hechizos de invocador"
+              }
+            />
           )}
 
           {status === "error" && (
@@ -360,29 +486,33 @@ export default function SummonerSpells() {
             </p>
           )}
 
-          {status === "success" && filteredSpells.length === 0 && (
-            <div className="summoner__empty">
-              <h2 className="summoner__emptyTitle">{t.empty}</h2>
-            </div>
-          )}
+          {status === "success" &&
+            filteredSpells.length === 0 && (
+              <div className="summoner__empty">
+                <h2 className="summoner__emptyTitle">
+                  {t.empty}
+                </h2>
+              </div>
+            )}
 
-          {status === "success" && filteredSpells.length > 0 && (
-            <>
-              <SpellSection
-                title={t.standardTitle}
-                subtitle={t.standardSubtitle}
-                spells={standardSpells}
-                t={t}
-              />
+          {status === "success" &&
+            filteredSpells.length > 0 && (
+              <>
+                <SpellSection
+                  title={t.standardTitle}
+                  subtitle={t.standardSubtitle}
+                  spells={standardSpells}
+                  t={t}
+                />
 
-              <SpellSection
-                title={t.specialTitle}
-                subtitle={t.specialSubtitle}
-                spells={specialSpells}
-                t={t}
-              />
-            </>
-          )}
+                <SpellSection
+                  title={t.specialTitle}
+                  subtitle={t.specialSubtitle}
+                  spells={specialSpells}
+                  t={t}
+                />
+              </>
+            )}
         </div>
       </section>
     </main>

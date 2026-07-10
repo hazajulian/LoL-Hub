@@ -5,6 +5,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { SearchBar } from "../../components/SearchBar/SearchBar";
+import { ServerLoader } from "../../components/ServerLoader/ServerLoader";
+
 import { useAuth } from "../../context/AuthContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { translations } from "../../i18n";
@@ -20,7 +22,15 @@ const FILTER_OPTIONS = [
 ];
 
 const POSITION_ORDER = ["Top", "Jungle", "Mid", "ADC", "Support"];
-const CLASS_ORDER = ["Assassin", "Fighter", "Mage", "Marksman", "Support", "Tank"];
+
+const CLASS_ORDER = [
+  "Assassin",
+  "Fighter",
+  "Mage",
+  "Marksman",
+  "Support",
+  "Tank",
+];
 
 const SORT_OPTIONS = [
   { value: "name-asc", labelKey: "sortAZ" },
@@ -62,8 +72,14 @@ const REGION_KEYS = {
 };
 
 function normalizeList(response) {
-  if (Array.isArray(response?.data)) return response.data;
-  if (Array.isArray(response)) return response;
+  if (Array.isArray(response?.data)) {
+    return response.data;
+  }
+
+  if (Array.isArray(response)) {
+    return response;
+  }
+
   return [];
 }
 
@@ -80,8 +96,9 @@ function sortByName(list, sortValue) {
     const secondName = String(b?.name ?? "");
 
     return (
-      firstName.localeCompare(secondName, undefined, { sensitivity: "base" }) *
-      direction
+      firstName.localeCompare(secondName, undefined, {
+        sensitivity: "base",
+      }) * direction
     );
   });
 }
@@ -106,7 +123,9 @@ function ChampionCard({ champion }) {
         />
       </span>
 
-      <span className="champions__name">{champion.name}</span>
+      <span className="champions__name">
+        {champion.name}
+      </span>
     </Link>
   );
 }
@@ -117,19 +136,27 @@ export default function Champions() {
 
   const t = translations[language].champions;
   const apiLang = language === "EN" ? "en" : "es";
-  const storageKey = user ? `favorites_${user.id}` : "favorites_guest";
+
+  const storageKey = user
+    ? `favorites_${user.id}`
+    : "favorites_guest";
 
   const dropdownRef = useRef(null);
 
   const [rawSearch, setRawSearch] = useState("");
   const [view, setView] = useState("all");
-  const [sortValue, setSortValue] = useState("name-asc");
+  const [sortValue, setSortValue] =
+    useState("name-asc");
 
   const [allChamps, setAllChamps] = useState([]);
   const [champDetails, setChampDetails] = useState([]);
+
   const [favorites, setFavorites] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem(storageKey)) || [];
+      return (
+        JSON.parse(localStorage.getItem(storageKey)) ||
+        []
+      );
     } catch {
       return [];
     }
@@ -150,15 +177,18 @@ export default function Champions() {
   );
 
   const currentViewLabel =
-    filterOptions.find((option) => option.value === view)?.label ||
-    filterOptions[0]?.label;
+    filterOptions.find(
+      (option) => option.value === view
+    )?.label || filterOptions[0]?.label;
 
   const filteredChamps = useMemo(() => {
     const query = rawSearch.trim().toLowerCase();
 
     const base = query
       ? allChamps.filter((champion) =>
-          String(champion.name || "").toLowerCase().includes(query)
+          String(champion.name || "")
+            .toLowerCase()
+            .includes(query)
         )
       : allChamps;
 
@@ -166,7 +196,9 @@ export default function Champions() {
   }, [allChamps, rawSearch, sortValue]);
 
   const uniqueSearchChamps = useMemo(() => {
-    if (!rawSearch.trim()) return [];
+    if (!rawSearch.trim()) {
+      return [];
+    }
 
     const unique = {};
 
@@ -174,7 +206,10 @@ export default function Champions() {
       unique[champion.id] = champion;
     });
 
-    return sortByName(Object.values(unique), sortValue);
+    return sortByName(
+      Object.values(unique),
+      sortValue
+    );
   }, [filteredChamps, rawSearch, sortValue]);
 
   const regionGroups = useMemo(() => {
@@ -182,13 +217,19 @@ export default function Champions() {
 
     filteredChamps.forEach((champion) => {
       const region = champion.region || "Unknown";
+
       groups[region] = groups[region] || [];
       groups[region].push(champion);
     });
 
     return Object.entries(groups)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([region, champions]) => [region, sortByName(champions, sortValue)]);
+      .sort(([firstRegion], [secondRegion]) =>
+        firstRegion.localeCompare(secondRegion)
+      )
+      .map(([region, champions]) => [
+        region,
+        sortByName(champions, sortValue),
+      ]);
   }, [filteredChamps, sortValue]);
 
   const classGroups = useMemo(() => {
@@ -201,7 +242,9 @@ export default function Champions() {
       });
     });
 
-    return CLASS_ORDER.filter((role) => groups[role]).map((role) => [
+    return CLASS_ORDER.filter(
+      (role) => groups[role]
+    ).map((role) => [
       role,
       sortByName(groups[role], sortValue),
     ]);
@@ -210,24 +253,43 @@ export default function Champions() {
   useEffect(() => {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+        window.scrollTo({
+          top: 0,
+          left: 0,
+          behavior: "auto",
+        });
       });
     });
   }, [language]);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+    function handleClickOutside(event) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
         setFilterOpen(false);
       }
-    };
+    }
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener(
+      "mousedown",
+      handleClickOutside
+    );
+
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside
+      );
+    };
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(storageKey, JSON.stringify(favorites));
+    localStorage.setItem(
+      storageKey,
+      JSON.stringify(favorites)
+    );
   }, [favorites, storageKey]);
 
   useEffect(() => {
@@ -239,25 +301,36 @@ export default function Champions() {
         setError(null);
 
         const limit = 100;
+
         let page = 1;
         let champions = [];
 
         while (isMounted) {
-          const response = await getChampions({ page, limit, lang: apiLang });
+          const response = await getChampions({
+            page,
+            limit,
+            lang: apiLang,
+          });
+
           const list = normalizeList(response);
 
           champions = champions.concat(list);
 
-          const totalPages = response?.meta?.totalPages;
+          const totalPages =
+            response?.meta?.totalPages;
 
           if (totalPages) {
-            if (page >= totalPages) break;
+            if (page >= totalPages) {
+              break;
+            }
 
             page += 1;
             continue;
           }
 
-          if (!list.length || list.length < limit) break;
+          if (!list.length || list.length < limit) {
+            break;
+          }
 
           page += 1;
         }
@@ -298,12 +371,16 @@ export default function Champions() {
 
         const details = await Promise.all(
           filteredChamps.map((champion) =>
-            getChampionById(champion.id, { lang: apiLang })
+            getChampionById(champion.id, {
+              lang: apiLang,
+            })
           )
         );
 
         if (isMounted) {
-          setChampDetails(details.map(normalizeDetail));
+          setChampDetails(
+            details.map(normalizeDetail)
+          );
         }
       } catch {
         if (isMounted) {
@@ -321,27 +398,53 @@ export default function Champions() {
     return () => {
       isMounted = false;
     };
-  }, [apiLang, view, filteredChamps, t.errorLoad]);
+  }, [
+    apiLang,
+    view,
+    filteredChamps,
+    t.errorLoad,
+  ]);
 
   return (
     <main className="champions">
-      <section className="champions__panel" aria-label={t.explorerAria}>
+      <section
+        className="champions__panel"
+        aria-label={t.explorerAria}
+      >
         <header className="champions__hero">
           <div className="champions__titleRow">
-            <span className="champions__stick" aria-hidden="true" />
-            <h1 className="champions__title">{t.title}</h1>
-            <span className="champions__stick" aria-hidden="true" />
+            <span
+              className="champions__stick"
+              aria-hidden="true"
+            />
+
+            <h1 className="champions__title">
+              {t.title}
+            </h1>
+
+            <span
+              className="champions__stick"
+              aria-hidden="true"
+            />
           </div>
 
-          <div className="champions__searchWrap" aria-label={t.searchFiltersAria}>
+          <div
+            className="champions__searchWrap"
+            aria-label={t.searchFiltersAria}
+          >
             <div className="champions__searchBarFrame">
-              <div className="champions__filter" ref={dropdownRef}>
+              <div
+                className="champions__filter"
+                ref={dropdownRef}
+              >
                 <button
                   className={`champions__filterBtn ${
                     filterOpen ? "is-open" : ""
                   }`}
                   type="button"
-                  onClick={() => setFilterOpen((open) => !open)}
+                  onClick={() =>
+                    setFilterOpen((open) => !open)
+                  }
                   aria-haspopup="listbox"
                   aria-expanded={filterOpen}
                   aria-label={t.filterViewAria}
@@ -350,7 +453,10 @@ export default function Champions() {
                     {currentViewLabel}
                   </span>
 
-                  <span className="champions__caret" aria-hidden="true">
+                  <span
+                    className="champions__caret"
+                    aria-hidden="true"
+                  >
                     ▾
                   </span>
                 </button>
@@ -362,7 +468,10 @@ export default function Champions() {
                     aria-label={t.filterViewAria}
                   >
                     {filterOptions
-                      .filter((option) => option.value !== view)
+                      .filter(
+                        (option) =>
+                          option.value !== view
+                      )
                       .map((option) => (
                         <li
                           key={option.value}
@@ -395,19 +504,27 @@ export default function Champions() {
             </div>
 
             <p className="champions__hint">
-              {rawSearch ? t.searchHint : t.browseHint}
+              {rawSearch
+                ? t.searchHint
+                : t.browseHint}
             </p>
           </div>
         </header>
 
         {loading && (
-          <p className="champions__status champions__status--loading">
-            {t.loading}
-          </p>
+          <ServerLoader
+            resource={
+              language === "EN"
+                ? "champions"
+                : "campeones"
+            }
+          />
         )}
 
         {error && (
-          <p className="champions__status champions__status--error">{error}</p>
+          <p className="champions__status champions__status--error">
+            {error}
+          </p>
         )}
 
         {!loading && !error && (
@@ -417,15 +534,21 @@ export default function Champions() {
                 className="champions__grid"
                 aria-label={t.searchResultsAria}
               >
-                {uniqueSearchChamps.map((champion) => (
-                  <ChampionCard key={champion.id} champion={champion} />
-                ))}
+                {uniqueSearchChamps.map(
+                  (champion) => (
+                    <ChampionCard
+                      key={champion.id}
+                      champion={champion}
+                    />
+                  )
+                )}
 
                 {uniqueSearchChamps.length === 0 && (
                   <div className="champions__empty">
                     <p className="champions__emptyTitle">
                       {t.noChampionsFound}
                     </p>
+
                     <p className="champions__emptyText">
                       {t.tryAnotherSearch}
                     </p>
@@ -439,85 +562,130 @@ export default function Champions() {
                     className="champions__grid"
                     aria-label={t.allChampionsAria}
                   >
-                    {filteredChamps.map((champion) => (
-                      <ChampionCard key={champion.id} champion={champion} />
-                    ))}
+                    {filteredChamps.map(
+                      (champion) => (
+                        <ChampionCard
+                          key={champion.id}
+                          champion={champion}
+                        />
+                      )
+                    )}
                   </section>
                 )}
 
                 {view === "positions" &&
                   POSITION_ORDER.map((position) => {
-                    const champions = filteredChamps.filter((champion) =>
-                      (champion.positions || []).includes(position)
-                    );
+                    const champions =
+                      filteredChamps.filter(
+                        (champion) =>
+                          (
+                            champion.positions || []
+                          ).includes(position)
+                      );
 
-                    if (!champions.length) return null;
+                    if (!champions.length) {
+                      return null;
+                    }
 
                     return (
                       <section
                         key={position}
                         className="champions__section"
-                        aria-label={translateFromMap(position, POSITION_KEYS, t)}
+                        aria-label={translateFromMap(
+                          position,
+                          POSITION_KEYS,
+                          t
+                        )}
                       >
                         <h2 className="champions__sectionTitle">
-                          {translateFromMap(position, POSITION_KEYS, t)}
+                          {translateFromMap(
+                            position,
+                            POSITION_KEYS,
+                            t
+                          )}
                         </h2>
 
                         <div className="champions__grid champions__grid--section">
-                          {champions.map((champion) => (
-                            <ChampionCard
-                              key={champion.id}
-                              champion={champion}
-                            />
-                          ))}
+                          {champions.map(
+                            (champion) => (
+                              <ChampionCard
+                                key={champion.id}
+                                champion={champion}
+                              />
+                            )
+                          )}
                         </div>
                       </section>
                     );
                   })}
 
                 {view === "regions" &&
-                  regionGroups.map(([region, champions]) => (
-                    <section
-                      key={region}
-                      className="champions__section"
-                      aria-label={translateFromMap(region, REGION_KEYS, t)}
-                    >
-                      <h2 className="champions__sectionTitle">
-                        {translateFromMap(region, REGION_KEYS, t)}
-                      </h2>
+                  regionGroups.map(
+                    ([region, champions]) => (
+                      <section
+                        key={region}
+                        className="champions__section"
+                        aria-label={translateFromMap(
+                          region,
+                          REGION_KEYS,
+                          t
+                        )}
+                      >
+                        <h2 className="champions__sectionTitle">
+                          {translateFromMap(
+                            region,
+                            REGION_KEYS,
+                            t
+                          )}
+                        </h2>
 
-                      <div className="champions__grid champions__grid--section">
-                        {champions.map((champion) => (
-                          <ChampionCard
-                            key={champion.id}
-                            champion={champion}
-                          />
-                        ))}
-                      </div>
-                    </section>
-                  ))}
+                        <div className="champions__grid champions__grid--section">
+                          {champions.map(
+                            (champion) => (
+                              <ChampionCard
+                                key={champion.id}
+                                champion={champion}
+                              />
+                            )
+                          )}
+                        </div>
+                      </section>
+                    )
+                  )}
 
                 {view === "classes" &&
-                  classGroups.map(([role, champions]) => (
-                    <section
-                      key={role}
-                      className="champions__section"
-                      aria-label={translateFromMap(role, CLASS_KEYS, t)}
-                    >
-                      <h2 className="champions__sectionTitle">
-                        {translateFromMap(role, CLASS_KEYS, t)}
-                      </h2>
+                  classGroups.map(
+                    ([role, champions]) => (
+                      <section
+                        key={role}
+                        className="champions__section"
+                        aria-label={translateFromMap(
+                          role,
+                          CLASS_KEYS,
+                          t
+                        )}
+                      >
+                        <h2 className="champions__sectionTitle">
+                          {translateFromMap(
+                            role,
+                            CLASS_KEYS,
+                            t
+                          )}
+                        </h2>
 
-                      <div className="champions__grid champions__grid--section">
-                        {champions.map((champion) => (
-                          <ChampionCard
-                            key={champion.id}
-                            champion={champion}
-                          />
-                        ))}
-                      </div>
-                    </section>
-                  ))}
+                        <div className="champions__grid champions__grid--section">
+                          {champions.map(
+                            (champion) => (
+                              <ChampionCard
+                                key={champion.id}
+                                champion={champion}
+                              />
+                            )
+                          )}
+                        </div>
+                      </section>
+                    )
+                  )}
               </>
             )}
           </div>

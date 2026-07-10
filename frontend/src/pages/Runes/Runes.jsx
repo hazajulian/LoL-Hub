@@ -4,13 +4,18 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { SearchBar } from "../../components/SearchBar/SearchBar";
+import { ServerLoader } from "../../components/ServerLoader/ServerLoader";
+
 import { useLanguage } from "../../context/LanguageContext";
 import { translations } from "../../i18n";
 
 import "./Runes.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3010";
-const DDRAGON_CDN = "https://ddragon.leagueoflegends.com/cdn/img/";
+const API_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:3010";
+
+const DDRAGON_CDN =
+  "https://ddragon.leagueoflegends.com/cdn/img/";
 
 function safeArr(value) {
   return Array.isArray(value) ? value : [];
@@ -25,10 +30,21 @@ function normalizeList(response) {
   if (Array.isArray(response?.runeTrees)) return response.runeTrees;
   if (Array.isArray(response?.items)) return response.items;
 
-  if (Array.isArray(response?.data?.results)) return response.data.results;
-  if (Array.isArray(response?.data?.runes)) return response.data.runes;
-  if (Array.isArray(response?.data?.runeTrees)) return response.data.runeTrees;
-  if (Array.isArray(response?.data?.items)) return response.data.items;
+  if (Array.isArray(response?.data?.results)) {
+    return response.data.results;
+  }
+
+  if (Array.isArray(response?.data?.runes)) {
+    return response.data.runes;
+  }
+
+  if (Array.isArray(response?.data?.runeTrees)) {
+    return response.data.runeTrees;
+  }
+
+  if (Array.isArray(response?.data?.items)) {
+    return response.data.items;
+  }
 
   return [];
 }
@@ -50,7 +66,13 @@ function cleanDescription(text) {
 }
 
 function getTreeId(tree) {
-  return tree?.treeId || tree?.id || tree?.key || tree?.slug || tree?.name;
+  return (
+    tree?.treeId ||
+    tree?.id ||
+    tree?.key ||
+    tree?.slug ||
+    tree?.name
+  );
 }
 
 function getTreeName(tree) {
@@ -58,26 +80,47 @@ function getTreeName(tree) {
 }
 
 function getTreeIcon(tree) {
-  return getImageUrl(tree?.iconUrl || tree?.icon || tree?.imageUrl);
+  return getImageUrl(
+    tree?.iconUrl ||
+      tree?.icon ||
+      tree?.imageUrl
+  );
 }
 
 function getRuneId(rune) {
-  return rune?.runeId || rune?.id || rune?.key || rune?.name;
+  return (
+    rune?.runeId ||
+    rune?.id ||
+    rune?.key ||
+    rune?.name
+  );
 }
 
 function getRuneIcon(rune) {
-  return getImageUrl(rune?.iconUrl || rune?.icon || rune?.imageUrl);
+  return getImageUrl(
+    rune?.iconUrl ||
+      rune?.icon ||
+      rune?.imageUrl
+  );
 }
 
 function getRuneShortDescription(rune) {
   return cleanDescription(
-    rune?.shortDesc || rune?.description || rune?.summary || rune?.longDesc || ""
+    rune?.shortDesc ||
+      rune?.description ||
+      rune?.summary ||
+      rune?.longDesc ||
+      ""
   );
 }
 
 function getRuneFullDescription(rune) {
   return cleanDescription(
-    rune?.longDesc || rune?.shortDesc || rune?.description || rune?.summary || ""
+    rune?.longDesc ||
+      rune?.shortDesc ||
+      rune?.description ||
+      rune?.summary ||
+      ""
   );
 }
 
@@ -87,10 +130,14 @@ function sortTrees(list, sortValue) {
     const nameB = String(getTreeName(b));
 
     if (sortValue === "name-desc") {
-      return nameB.localeCompare(nameA, undefined, { sensitivity: "base" });
+      return nameB.localeCompare(nameA, undefined, {
+        sensitivity: "base",
+      });
     }
 
-    return nameA.localeCompare(nameB, undefined, { sensitivity: "base" });
+    return nameA.localeCompare(nameB, undefined, {
+      sensitivity: "base",
+    });
   });
 }
 
@@ -102,10 +149,19 @@ function filterTreeRunes(tree, searchTerm) {
   const filteredSlots = safeArr(tree.slots)
     .map((slot) => {
       const runes = safeArr(slot.runes).filter((rune) => {
-        const name = String(rune?.name || "").toLowerCase();
-        const key = String(rune?.key || "").toLowerCase();
-        const shortDesc = getRuneShortDescription(rune).toLowerCase();
-        const fullDesc = getRuneFullDescription(rune).toLowerCase();
+        const name = String(
+          rune?.name || ""
+        ).toLowerCase();
+
+        const key = String(
+          rune?.key || ""
+        ).toLowerCase();
+
+        const shortDesc =
+          getRuneShortDescription(rune).toLowerCase();
+
+        const fullDesc =
+          getRuneFullDescription(rune).toLowerCase();
 
         return (
           name.includes(term) ||
@@ -115,11 +171,17 @@ function filterTreeRunes(tree, searchTerm) {
         );
       });
 
-      return { ...slot, runes };
+      return {
+        ...slot,
+        runes,
+      };
     })
     .filter((slot) => slot.runes.length > 0);
 
-  return { ...tree, slots: filteredSlots };
+  return {
+    ...tree,
+    slots: filteredSlots,
+  };
 }
 
 function getSlotTitle(slotIndex, t) {
@@ -154,13 +216,20 @@ function renderHighlightedText(text) {
 
     if (pattern.test(part)) {
       return (
-        <strong className="runes-modal__textStrong" key={`${part}-${index}`}>
+        <strong
+          className="runes-modal__textStrong"
+          key={`${part}-${index}`}
+        >
           {part}
         </strong>
       );
     }
 
-    return <span key={`${part}-${index}`}>{part}</span>;
+    return (
+      <span key={`${part}-${index}`}>
+        {part}
+      </span>
+    );
   });
 }
 
@@ -180,23 +249,35 @@ export default function Runes() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const treeFilters = useMemo(() => sortTrees(trees, "name-asc"), [trees]);
+  const treeFilters = useMemo(
+    () => sortTrees(trees, "name-asc"),
+    [trees]
+  );
 
   const filteredTrees = useMemo(() => {
     const byTree =
       selectedTree === "all"
         ? trees
-        : trees.filter((tree) => String(getTreeId(tree)) === String(selectedTree));
+        : trees.filter(
+            (tree) =>
+              String(getTreeId(tree)) ===
+              String(selectedTree)
+          );
 
     return sortTrees(byTree, sortValue)
       .map((tree) => filterTreeRunes(tree, search))
-      .filter((tree) => safeArr(tree.slots).some((slot) => slot.runes.length > 0));
+      .filter((tree) =>
+        safeArr(tree.slots).some(
+          (slot) => slot.runes.length > 0
+        )
+      );
   }, [trees, selectedTree, search, sortValue]);
 
   const totalVisibleRunes = useMemo(() => {
     return filteredTrees.reduce((total, tree) => {
       const treeTotal = safeArr(tree.slots).reduce(
-        (slotTotal, slot) => slotTotal + safeArr(slot.runes).length,
+        (slotTotal, slot) =>
+          slotTotal + safeArr(slot.runes).length,
         0
       );
 
@@ -205,32 +286,43 @@ export default function Runes() {
   }, [filteredTrees]);
 
   const selectedRuneText = selectedRune
-    ? splitDescription(getRuneFullDescription(selectedRune.rune))
+    ? splitDescription(
+        getRuneFullDescription(selectedRune.rune)
+      )
     : [];
 
-  const openRuneModal = ({ rune, tree, slotIndex }) => {
+  function openRuneModal({
+    rune,
+    tree,
+    slotIndex,
+  }) {
     setSelectedRune({
       rune,
       treeName: getTreeName(tree),
       treeIcon: getTreeIcon(tree),
       slotTitle: getSlotTitle(slotIndex, t),
     });
-  };
+  }
 
-  const closeRuneModal = () => {
+  function closeRuneModal() {
     setSelectedRune(null);
-  };
+  }
 
   useEffect(() => {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+        window.scrollTo({
+          top: 0,
+          left: 0,
+          behavior: "auto",
+        });
       });
     });
   }, [language]);
 
   useEffect(() => {
     let alive = true;
+
     const controller = new AbortController();
 
     async function loadRunes() {
@@ -238,12 +330,19 @@ export default function Runes() {
         setLoading(true);
         setError("");
 
-        const response = await fetch(`${API_URL}/api/v1/runes?lang=${apiLang}`, {
-          signal: controller.signal,
-          headers: { "Accept-Language": apiLang },
-        });
+        const response = await fetch(
+          `${API_URL}/api/v1/runes?lang=${apiLang}`,
+          {
+            signal: controller.signal,
+            headers: {
+              "Accept-Language": apiLang,
+            },
+          }
+        );
 
-        if (!response.ok) throw new Error("Fetch failed");
+        if (!response.ok) {
+          throw new Error("Fetch failed");
+        }
 
         const data = await response.json();
         const list = normalizeList(data);
@@ -252,7 +351,9 @@ export default function Runes() {
           setTrees(list);
         }
       } catch (error) {
-        if (error.name === "AbortError") return;
+        if (error.name === "AbortError") {
+          return;
+        }
 
         if (alive) {
           setError(t.error);
@@ -275,16 +376,24 @@ export default function Runes() {
   useEffect(() => {
     if (!selectedRune) return;
 
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape") setSelectedRune(null);
-    };
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        setSelectedRune(null);
+      }
+    }
 
     window.addEventListener("keydown", handleKeyDown);
     document.body.classList.add("runes-modal-open");
 
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      document.body.classList.remove("runes-modal-open");
+      window.removeEventListener(
+        "keydown",
+        handleKeyDown
+      );
+
+      document.body.classList.remove(
+        "runes-modal-open"
+      );
     };
   }, [selectedRune]);
 
@@ -295,10 +404,17 @@ export default function Runes() {
           className="runes-modal"
           role="dialog"
           aria-modal="true"
-          aria-label={selectedRune.rune?.name || t.detail}
+          aria-label={
+            selectedRune.rune?.name || t.detail
+          }
           onClick={closeRuneModal}
         >
-          <div className="runes-modal__inner" onClick={(event) => event.stopPropagation()}>
+          <div
+            className="runes-modal__inner"
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+          >
             <button
               className="runes-modal__close"
               type="button"
@@ -314,29 +430,44 @@ export default function Runes() {
                 {getRuneIcon(selectedRune.rune) ? (
                   <img
                     className="runes-modal__icon"
-                    src={getRuneIcon(selectedRune.rune)}
+                    src={getRuneIcon(
+                      selectedRune.rune
+                    )}
                     alt={selectedRune.rune.name}
                     loading="eager"
                     decoding="async"
                   />
                 ) : (
                   <span className="runes-modal__fallback">
-                    {String(selectedRune.rune?.name || "?").charAt(0)}
+                    {String(
+                      selectedRune.rune?.name || "?"
+                    ).charAt(0)}
                   </span>
                 )}
               </div>
 
               <div className="runes-modal__titleBox">
-                <span className="runes-modal__kicker">{t.detail}</span>
-                <h2 className="runes-modal__title">{selectedRune.rune.name}</h2>
+                <span className="runes-modal__kicker">
+                  {t.detail}
+                </span>
+
+                <h2 className="runes-modal__title">
+                  {selectedRune.rune.name}
+                </h2>
 
                 <div className="runes-modal__meta">
                   <span>
-                    {t.tree}: <strong>{selectedRune.treeName}</strong>
+                    {t.tree}:{" "}
+                    <strong>
+                      {selectedRune.treeName}
+                    </strong>
                   </span>
 
                   <span>
-                    {t.branch}: <strong>{selectedRune.slotTitle}</strong>
+                    {t.branch}:{" "}
+                    <strong>
+                      {selectedRune.slotTitle}
+                    </strong>
                   </span>
                 </div>
               </div>
@@ -345,14 +476,23 @@ export default function Runes() {
             <div className="runes-modal__body">
               <div className="runes-modal__text">
                 {selectedRuneText.length > 0 ? (
-                  selectedRuneText.map((paragraph, index) => (
-                    <p className="runes-modal__line" key={`${paragraph}-${index}`}>
-                      {renderHighlightedText(paragraph)}
-                    </p>
-                  ))
+                  selectedRuneText.map(
+                    (paragraph, index) => (
+                      <p
+                        className="runes-modal__line"
+                        key={`${paragraph}-${index}`}
+                      >
+                        {renderHighlightedText(
+                          paragraph
+                        )}
+                      </p>
+                    )
+                  )
                 ) : (
                   <p className="runes-modal__line">
-                    {getRuneShortDescription(selectedRune.rune)}
+                    {getRuneShortDescription(
+                      selectedRune.rune
+                    )}
                   </p>
                 )}
               </div>
@@ -361,12 +501,25 @@ export default function Runes() {
         </section>
       )}
 
-      <section className="runes__panel" aria-label={t.explorerAria}>
+      <section
+        className="runes__panel"
+        aria-label={t.explorerAria}
+      >
         <header className="runes__hero">
           <div className="runes__titleRow">
-            <span className="runes__stick" aria-hidden="true" />
-            <h1 className="runes__title">{t.title}</h1>
-            <span className="runes__stick" aria-hidden="true" />
+            <span
+              className="runes__stick"
+              aria-hidden="true"
+            />
+
+            <h1 className="runes__title">
+              {t.title}
+            </h1>
+
+            <span
+              className="runes__stick"
+              aria-hidden="true"
+            />
           </div>
 
           <div className="runes__searchWrap">
@@ -382,13 +535,21 @@ export default function Runes() {
             </div>
 
             <div className="runes__rolesRow">
-              <span className="runes__rolesLabel">{t.trees}</span>
+              <span className="runes__rolesLabel">
+                {t.trees}
+              </span>
 
               <div className="runes__chips">
                 <button
                   type="button"
-                  className={`runes__chip ${selectedTree === "all" ? "is-active" : ""}`}
-                  onClick={() => setSelectedTree("all")}
+                  className={`runes__chip ${
+                    selectedTree === "all"
+                      ? "is-active"
+                      : ""
+                  }`}
+                  onClick={() =>
+                    setSelectedTree("all")
+                  }
                 >
                   {t.all}
                 </button>
@@ -401,9 +562,14 @@ export default function Runes() {
                       key={id}
                       type="button"
                       className={`runes__chip ${
-                        String(selectedTree) === String(id) ? "is-active" : ""
+                        String(selectedTree) ===
+                        String(id)
+                          ? "is-active"
+                          : ""
                       }`}
-                      onClick={() => setSelectedTree(id)}
+                      onClick={() =>
+                        setSelectedTree(id)
+                      }
                     >
                       {getTreeName(tree)}
                     </button>
@@ -412,24 +578,45 @@ export default function Runes() {
               </div>
 
               <span className="runes__count">
-                {t.showing} {totalVisibleRunes} {t.runes}
+                {t.showing} {totalVisibleRunes}{" "}
+                {t.runes}
               </span>
             </div>
 
-            <p className="runes__hint">{t.subtitle}</p>
+            <p className="runes__hint">
+              {t.subtitle}
+            </p>
           </div>
         </header>
 
-        {loading && <p className="runes__status">{t.loading}</p>}
+        {loading && (
+          <ServerLoader
+            resource={
+              language === "EN"
+                ? "runes"
+                : "runas"
+            }
+          />
+        )}
 
-        {error && <p className="runes__status runes__status--error">{error}</p>}
+        {error && (
+          <p className="runes__status runes__status--error">
+            {error}
+          </p>
+        )}
 
         {!loading && !error && (
           <div className="runes__content">
             {filteredTrees.length > 0 ? (
-              <section className="runes__trees" aria-label={t.treesAria}>
+              <section
+                className="runes__trees"
+                aria-label={t.treesAria}
+              >
                 {filteredTrees.map((tree) => (
-                  <article className="runes__treeCard" key={getTreeId(tree)}>
+                  <article
+                    className="runes__treeCard"
+                    key={getTreeId(tree)}
+                  >
                     <header className="runes__treeHead">
                       <div className="runes__treeIconBox">
                         {getTreeIcon(tree) ? (
@@ -441,70 +628,112 @@ export default function Runes() {
                             aria-hidden="true"
                           />
                         ) : (
-                          <span className="runes__treeFallback" aria-hidden="true">
-                            {String(getTreeName(tree)).charAt(0)}
+                          <span
+                            className="runes__treeFallback"
+                            aria-hidden="true"
+                          >
+                            {String(
+                              getTreeName(tree)
+                            ).charAt(0)}
                           </span>
                         )}
                       </div>
 
                       <div className="runes__treeText">
-                        <h2 className="runes__treeTitle">{getTreeName(tree)}</h2>
+                        <h2 className="runes__treeTitle">
+                          {getTreeName(tree)}
+                        </h2>
                       </div>
                     </header>
 
                     <div className="runes__slots">
-                      {safeArr(tree.slots).map((slot, slotIndex) => {
-                        const runes = safeArr(slot.runes);
-                        if (!runes.length) return null;
+                      {safeArr(tree.slots).map(
+                        (slot, slotIndex) => {
+                          const runes = safeArr(
+                            slot.runes
+                          );
 
-                        return (
-                          <section
-                            className="runes__slot"
-                            key={`${getTreeId(tree)}-${slotIndex}`}
-                          >
-                            <h3 className="runes__slotTitle">
-                              {getSlotTitle(slotIndex, t)}
-                            </h3>
+                          if (!runes.length) {
+                            return null;
+                          }
 
-                            <div className="runes__grid">
-                              {runes.map((rune) => (
-                                <button
-                                  type="button"
-                                  className="runes__card"
-                                  key={getRuneId(rune)}
-                                  title={rune.name}
-                                  onClick={() => openRuneModal({ rune, tree, slotIndex })}
-                                >
-                                  <span className="runes__iconBox">
-                                    {getRuneIcon(rune) ? (
-                                      <img
-                                        className="runes__icon"
-                                        src={getRuneIcon(rune)}
-                                        alt={rune.name}
-                                        loading="lazy"
-                                      />
-                                    ) : (
-                                      <span className="runes__iconFallback">
-                                        {String(rune?.name || "?").charAt(0)}
-                                      </span>
+                          return (
+                            <section
+                              className="runes__slot"
+                              key={`${getTreeId(
+                                tree
+                              )}-${slotIndex}`}
+                            >
+                              <h3 className="runes__slotTitle">
+                                {getSlotTitle(
+                                  slotIndex,
+                                  t
+                                )}
+                              </h3>
+
+                              <div className="runes__grid">
+                                {runes.map((rune) => (
+                                  <button
+                                    type="button"
+                                    className="runes__card"
+                                    key={getRuneId(
+                                      rune
                                     )}
-                                  </span>
+                                    title={rune.name}
+                                    onClick={() =>
+                                      openRuneModal({
+                                        rune,
+                                        tree,
+                                        slotIndex,
+                                      })
+                                    }
+                                  >
+                                    <span className="runes__iconBox">
+                                      {getRuneIcon(
+                                        rune
+                                      ) ? (
+                                        <img
+                                          className="runes__icon"
+                                          src={getRuneIcon(
+                                            rune
+                                          )}
+                                          alt={rune.name}
+                                          loading="lazy"
+                                        />
+                                      ) : (
+                                        <span className="runes__iconFallback">
+                                          {String(
+                                            rune?.name ||
+                                              "?"
+                                          ).charAt(
+                                            0
+                                          )}
+                                        </span>
+                                      )}
+                                    </span>
 
-                                  <span className="runes__body">
-                                    <span className="runes__name">{rune.name}</span>
-
-                                    {getRuneShortDescription(rune) && (
-                                      <span className="runes__desc">
-                                        {getRuneShortDescription(rune)}
+                                    <span className="runes__body">
+                                      <span className="runes__name">
+                                        {rune.name}
                                       </span>
-                                    )}
-                                  </span>
-                                </button>
-                              ))}
-                            </div>
-                          </section>
-                        );
-                      })}
+
+                                      {getRuneShortDescription(
+                                        rune
+                                      ) && (
+                                        <span className="runes__desc">
+                                          {getRuneShortDescription(
+                                            rune
+                                          )}
+                                        </span>
+                                      )}
+                                    </span>
+                                  </button>
+                                ))}
+                              </div>
+                            </section>
+                          );
+                        }
+                      )}
                     </div>
                   </article>
                 ))}

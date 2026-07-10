@@ -12,6 +12,8 @@ import {
   FaTimes,
 } from "react-icons/fa";
 
+import { ServerLoader } from "../../components/ServerLoader/ServerLoader";
+
 import { useAuth } from "../../context/AuthContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { translations } from "../../i18n";
@@ -19,8 +21,12 @@ import { api } from "../../services/api";
 
 import "./ChampionDetail.css";
 
-const API_URL = `${import.meta.env.VITE_API_URL || "http://localhost:3010"}/api/v1`;
-const PLACEHOLDER_IMG = "https://static.thenounproject.com/png/104062-200.png";
+const API_URL = `${
+  import.meta.env.VITE_API_URL || "http://localhost:3010"
+}/api/v1`;
+
+const PLACEHOLDER_IMG =
+  "https://static.thenounproject.com/png/104062-200.png";
 
 function safeArr(value) {
   return Array.isArray(value) ? value : [];
@@ -55,6 +61,7 @@ function normalizeKey(value) {
 
 function buildKeyVariants(value) {
   const base = normalizeKey(value);
+
   if (!base) return [];
 
   const lower = base.toLowerCase();
@@ -101,11 +108,17 @@ function translateList(dictionary = {}, values) {
 
   if (!list.length) return "-";
 
-  return list.map((value) => translateValue(dictionary, value)).join(", ");
+  return list
+    .map((value) => translateValue(dictionary, value))
+    .join(", ");
 }
 
 function resolveSkinUrls(champId, skin) {
-  const splash = skin?.splashUrl || skin?.imageUrl || "";
+  const splash =
+    skin?.splashUrl ||
+    skin?.imageUrl ||
+    "";
+
   const loading = skin?.loadingUrl || "";
 
   if (!loading) {
@@ -116,18 +129,28 @@ function resolveSkinUrls(champId, skin) {
   }
 
   const isDdragonLoading =
-    typeof loading === "string" && loading.includes("/cdn/img/champion/loading/");
+    typeof loading === "string" &&
+    loading.includes("/cdn/img/champion/loading/");
+
   const isWiki =
-    typeof loading === "string" && loading.includes("wiki.leagueoflegends.com");
+    typeof loading === "string" &&
+    loading.includes("wiki.leagueoflegends.com");
 
   if (isWiki) {
     return {
       splashUrl: splash || PLACEHOLDER_IMG,
-      loadingUrl: loading || splash || PLACEHOLDER_IMG,
+      loadingUrl:
+        loading ||
+        splash ||
+        PLACEHOLDER_IMG,
     };
   }
 
-  if (champId === "Fiddlesticks" && isDdragonLoading && splash) {
+  if (
+    champId === "Fiddlesticks" &&
+    isDdragonLoading &&
+    splash
+  ) {
     return {
       splashUrl: splash || PLACEHOLDER_IMG,
       loadingUrl: splash || PLACEHOLDER_IMG,
@@ -136,7 +159,10 @@ function resolveSkinUrls(champId, skin) {
 
   return {
     splashUrl: splash || PLACEHOLDER_IMG,
-    loadingUrl: loading || splash || PLACEHOLDER_IMG,
+    loadingUrl:
+      loading ||
+      splash ||
+      PLACEHOLDER_IMG,
   };
 }
 
@@ -145,8 +171,11 @@ export default function ChampionDetail() {
   const { user } = useAuth();
   const { language } = useLanguage();
 
-  const t = translations[language].championDetail;
-  const apiLang = language === "ES" ? "es" : "en";
+  const t =
+    translations[language].championDetail;
+
+  const apiLang =
+    language === "ES" ? "es" : "en";
 
   const [champ, setChamp] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -156,53 +185,79 @@ export default function ChampionDetail() {
 
   const [isFav, setIsFav] = useState(false);
 
-  const [skinIndex, setSkinIndex] = useState(0);
-  const [skinLoaded, setSkinLoaded] = useState({ splash: false, loading: false });
+  const [skinIndex, setSkinIndex] =
+    useState(0);
 
-  const [isOverlayOpen, setIsOverlayOpen] = useState(false);
+  const [skinLoaded, setSkinLoaded] =
+    useState({
+      splash: false,
+      loading: false,
+    });
 
-  const showToast = (message) => {
+  const [isOverlayOpen, setIsOverlayOpen] =
+    useState(false);
+
+  function showToast(message) {
     setToast(message);
 
-    if (toastTimer.current) clearTimeout(toastTimer.current);
+    if (toastTimer.current) {
+      clearTimeout(toastTimer.current);
+    }
 
     toastTimer.current = setTimeout(() => {
       setToast("");
     }, 1600);
-  };
+  }
 
   useEffect(() => {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+        window.scrollTo({
+          top: 0,
+          left: 0,
+          behavior: "auto",
+        });
       });
     });
   }, [id, language]);
 
   useEffect(() => {
     return () => {
-      if (toastTimer.current) clearTimeout(toastTimer.current);
+      if (toastTimer.current) {
+        clearTimeout(toastTimer.current);
+      }
     };
   }, []);
 
   useEffect(() => {
     let mounted = true;
+
     const controller = new AbortController();
 
     async function loadChampion() {
       try {
         setLoading(true);
 
-        const response = await fetch(`${API_URL}/champions/${id}?lang=${apiLang}`, {
-          signal: controller.signal,
-          headers: { "Accept-Language": apiLang },
-        });
+        const response = await fetch(
+          `${API_URL}/champions/${id}?lang=${apiLang}`,
+          {
+            signal: controller.signal,
+            headers: {
+              "Accept-Language": apiLang,
+            },
+          }
+        );
 
-        if (!response.ok) throw new Error("Fetch failed");
+        if (!response.ok) {
+          throw new Error("Fetch failed");
+        }
 
         const data = await response.json();
 
-        if (data?.skins?.[0]?.name?.toLowerCase?.() === "default") {
+        if (
+          data?.skins?.[0]?.name?.toLowerCase?.() ===
+          "default"
+        ) {
           data.skins[0].name = data.name;
         }
 
@@ -210,12 +265,25 @@ export default function ChampionDetail() {
 
         setChamp(data);
         setSkinIndex(0);
-        setSkinLoaded({ splash: false, loading: false });
+
+        setSkinLoaded({
+          splash: false,
+          loading: false,
+        });
+
         setIsOverlayOpen(false);
-      } catch {
-        if (mounted) setChamp(null);
+      } catch (error) {
+        if (error.name === "AbortError") {
+          return;
+        }
+
+        if (mounted) {
+          setChamp(null);
+        }
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     }
 
@@ -237,18 +305,26 @@ export default function ChampionDetail() {
       }
 
       try {
-        const response = await api.get("/auth/favorites");
-        const favorites = response.data?.favorites || [];
+        const response = await api.get(
+          "/auth/favorites"
+        );
+
+        const favorites =
+          response.data?.favorites || [];
 
         if (!alive) return;
 
         setIsFav(
           favorites
-            .map((favoriteId) => String(favoriteId).toLowerCase())
+            .map((favoriteId) =>
+              String(favoriteId).toLowerCase()
+            )
             .includes(String(id).toLowerCase())
         );
       } catch {
-        if (alive) setIsFav(false);
+        if (alive) {
+          setIsFav(false);
+        }
       }
     }
 
@@ -264,81 +340,152 @@ export default function ChampionDetail() {
   const name = safeChamp.name || "";
   const title = safeChamp.title || "";
 
-  const region = translateValue(t.regions, safeChamp.region || "-");
-  const roles = translateList(t.rolesDict, safeChamp.roles || []);
-  const positions = translateList(t.positionsDict, safeChamp.positions || []);
+  const region = translateValue(
+    t.regions,
+    safeChamp.region || "-"
+  );
+
+  const roles = translateList(
+    t.rolesDict,
+    safeChamp.roles || []
+  );
+
+  const positions = translateList(
+    t.positionsDict,
+    safeChamp.positions || []
+  );
 
   const lore = safeChamp.lore || "";
   const allytips = safeChamp.allytips || [];
   const enemytips = safeChamp.enemytips || [];
 
-  const abilities = safeChamp.abilities || { passive: {}, spells: [] };
+  const abilities = safeChamp.abilities || {
+    passive: {},
+    spells: [],
+  };
+
   const passive = abilities.passive || {};
   const spells = safeArr(abilities.spells);
 
   const skins = safeArr(safeChamp.skins);
   const totalSkins = Math.max(1, skins.length);
-  const currentIndex = clamp(skinIndex, 0, totalSkins - 1);
+
+  const currentIndex = clamp(
+    skinIndex,
+    0,
+    totalSkins - 1
+  );
 
   const currentSkin = skins[currentIndex] || {};
   const champId = safeChamp.id || id || "";
 
-  const { splashUrl: skinSplashUrl, loadingUrl: skinLoadingUrl } = resolveSkinUrls(
-    champId,
-    currentSkin
-  );
+  const {
+    splashUrl: skinSplashUrl,
+    loadingUrl: skinLoadingUrl,
+  } = resolveSkinUrls(champId, currentSkin);
 
-  const skinName = currentSkin.name || t.noName;
+  const skinName =
+    currentSkin.name || t.noName;
 
-  const prevIndex = currentIndex === 0 ? totalSkins - 1 : currentIndex - 1;
-  const nextIndex = currentIndex === totalSkins - 1 ? 0 : currentIndex + 1;
+  const prevIndex =
+    currentIndex === 0
+      ? totalSkins - 1
+      : currentIndex - 1;
+
+  const nextIndex =
+    currentIndex === totalSkins - 1
+      ? 0
+      : currentIndex + 1;
 
   const info = safeChamp.info || {};
   const difficulty = info.difficulty || 0;
-  const difficultyLevel = difficulty <= 3 ? 1 : difficulty <= 7 ? 2 : 3;
+
+  const difficultyLevel =
+    difficulty <= 3
+      ? 1
+      : difficulty <= 7
+        ? 2
+        : 3;
 
   const difficultyLabel =
     difficultyLevel === 1
       ? t.difficultyEasy
       : difficultyLevel === 2
-      ? t.difficultyMedium
-      : t.difficultyHard;
+        ? t.difficultyMedium
+        : t.difficultyHard;
 
   const stats = safeChamp.stats || {};
 
-  const translateStat = (statKey) => {
+  function translateStat(statKey) {
     return t.stats?.[statKey] || statKey;
-  };
+  }
 
-  const goToSkin = (targetIndex) => {
+  function goToSkin(targetIndex) {
     if (totalSkins <= 1) return;
 
-    setSkinLoaded({ splash: false, loading: false });
-    setSkinIndex(targetIndex);
-  };
+    setSkinLoaded({
+      splash: false,
+      loading: false,
+    });
 
-  const prevSkin = () => goToSkin(prevIndex);
-  const nextSkin = () => goToSkin(nextIndex);
+    setSkinIndex(targetIndex);
+  }
+
+  function prevSkin() {
+    goToSkin(prevIndex);
+  }
+
+  function nextSkin() {
+    goToSkin(nextIndex);
+  }
 
   useEffect(() => {
     if (!isOverlayOpen) return;
 
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape") setIsOverlayOpen(false);
-      if (event.key === "ArrowLeft") prevSkin();
-      if (event.key === "ArrowRight") nextSkin();
-    };
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        setIsOverlayOpen(false);
+      }
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+      if (event.key === "ArrowLeft") {
+        prevSkin();
+      }
+
+      if (event.key === "ArrowRight") {
+        nextSkin();
+      }
+    }
+
+    window.addEventListener(
+      "keydown",
+      handleKeyDown
+    );
+
+    return () => {
+      window.removeEventListener(
+        "keydown",
+        handleKeyDown
+      );
+    };
   }, [isOverlayOpen, skinIndex]);
 
   useEffect(() => {
     if (!skins.length) return;
 
-    const current = resolveSkinUrls(champId, skins[currentIndex] || {});
-    const previous = resolveSkinUrls(champId, skins[prevIndex] || {});
-    const next = resolveSkinUrls(champId, skins[nextIndex] || {});
+    const current = resolveSkinUrls(
+      champId,
+      skins[currentIndex] || {}
+    );
+
+    const previous = resolveSkinUrls(
+      champId,
+      skins[prevIndex] || {}
+    );
+
+    const next = resolveSkinUrls(
+      champId,
+      skins[nextIndex] || {}
+    );
 
     preloadMany([
       current.splashUrl,
@@ -348,9 +495,15 @@ export default function ChampionDetail() {
       next.splashUrl,
       next.loadingUrl,
     ]);
-  }, [champId, currentIndex, prevIndex, nextIndex, skins]);
+  }, [
+    champId,
+    currentIndex,
+    prevIndex,
+    nextIndex,
+    skins,
+  ]);
 
-  const toggleFav = async () => {
+  async function toggleFav() {
     if (!user) {
       showToast(t.mustLogin);
       return;
@@ -360,34 +513,68 @@ export default function ChampionDetail() {
     const nextState = !isFav;
 
     setIsFav(nextState);
-    showToast(nextState ? t.addedFavorite : t.removedFavorite);
+
+    showToast(
+      nextState
+        ? t.addedFavorite
+        : t.removedFavorite
+    );
 
     try {
       if (nextState) {
-        await api.post(`/auth/favorites/${id}`);
+        await api.post(
+          `/auth/favorites/${id}`
+        );
       } else {
-        await api.delete(`/auth/favorites/${id}`);
+        await api.delete(
+          `/auth/favorites/${id}`
+        );
       }
     } catch (error) {
       setIsFav(previousState);
-      showToast(error.response?.data?.message || t.favoriteUpdateError);
+
+      showToast(
+        error.response?.data?.message ||
+          t.favoriteUpdateError
+      );
     }
-  };
+  }
 
   const overlayImg =
-    skinSplashUrl || skinLoadingUrl || safeChamp.splashUrl || PLACEHOLDER_IMG;
+    skinSplashUrl ||
+    skinLoadingUrl ||
+    safeChamp.splashUrl ||
+    PLACEHOLDER_IMG;
 
   if (loading) {
-    return <div className="cd-loading">{t.loading}</div>;
+    return (
+      <main className="cd-wrap">
+        <ServerLoader
+          resource={
+            language === "EN"
+              ? "champion details"
+              : "detalles del campeón"
+          }
+        />
+      </main>
+    );
   }
 
   if (!champ) {
-    return <div className="cd-loading">{t.errorLoad}</div>;
+    return (
+      <div className="cd-loading">
+        {t.errorLoad}
+      </div>
+    );
   }
 
   return (
     <div className="cd-wrap">
-      {toast && <div className="cd-toast">{toast}</div>}
+      {toast && (
+        <div className="cd-toast">
+          {toast}
+        </div>
+      )}
 
       {isOverlayOpen && (
         <div
@@ -395,10 +582,20 @@ export default function ChampionDetail() {
           role="dialog"
           aria-modal="true"
           aria-label={t.skinPreview}
-          onClick={() => setIsOverlayOpen(false)}
+          onClick={() =>
+            setIsOverlayOpen(false)
+          }
         >
-          <div className="cd-overlayInner" onClick={(event) => event.stopPropagation()}>
-            <div className="cd-overlayNav" aria-label={t.skinNavigation}>
+          <div
+            className="cd-overlayInner"
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+          >
+            <div
+              className="cd-overlayNav"
+              aria-label={t.skinNavigation}
+            >
               <button
                 className="cd-overlayArrow cd-overlayArrow--left"
                 type="button"
@@ -431,7 +628,9 @@ export default function ChampionDetail() {
             <button
               className="cd-overlayClose"
               type="button"
-              onClick={() => setIsOverlayOpen(false)}
+              onClick={() =>
+                setIsOverlayOpen(false)
+              }
               aria-label={t.close}
               title={t.close}
             >
@@ -446,15 +645,28 @@ export default function ChampionDetail() {
               decoding="async"
               fetchPriority="high"
               onError={(event) => {
-                if (event.currentTarget.dataset.fallback) return;
+                if (
+                  event.currentTarget.dataset
+                    .fallback
+                ) {
+                  return;
+                }
 
-                event.currentTarget.dataset.fallback = "1";
-                event.currentTarget.src = safeChamp.splashUrl || PLACEHOLDER_IMG;
+                event.currentTarget.dataset.fallback =
+                  "1";
+
+                event.currentTarget.src =
+                  safeChamp.splashUrl ||
+                  PLACEHOLDER_IMG;
               }}
             />
 
-            <div className="cd-overlayCaption" title={skinName}>
-              {skinName} ({currentIndex + 1}/{totalSkins})
+            <div
+              className="cd-overlayCaption"
+              title={skinName}
+            >
+              {skinName} ({currentIndex + 1}/
+              {totalSkins})
             </div>
           </div>
         </div>
@@ -463,25 +675,41 @@ export default function ChampionDetail() {
       <section className="cd-panel">
         <header className="cd-head">
           <div className="cd-title">
-            <h1 className="cd-name">{name}</h1>
-            <p className="cd-subtitle">{title}</p>
+            <h1 className="cd-name">
+              {name}
+            </h1>
+
+            <p className="cd-subtitle">
+              {title}
+            </p>
           </div>
 
           <button
             className="cd-fav"
             onClick={toggleFav}
-            aria-label={isFav ? t.removeFromFavorites : t.addToFavorites}
+            aria-label={
+              isFav
+                ? t.removeFromFavorites
+                : t.addToFavorites
+            }
             aria-pressed={isFav}
             type="button"
           >
-            {isFav ? <FaHeart /> : <FaRegHeart />}
+            {isFav ? (
+              <FaHeart />
+            ) : (
+              <FaRegHeart />
+            )}
           </button>
         </header>
 
         <section className="cd-topCard">
           <div className="cd-skinHeader">
             <div className="cd-skinHeaderLeft">
-              <span className="cd-skinHeaderTitle">{name}</span>
+              <span className="cd-skinHeaderTitle">
+                {name}
+              </span>
+
               <span className="cd-skinHeaderCount">
                 {currentIndex + 1}/{totalSkins}
               </span>
@@ -508,7 +736,9 @@ export default function ChampionDetail() {
 
               <button
                 className="cd-navBtn"
-                onClick={() => setIsOverlayOpen(true)}
+                onClick={() =>
+                  setIsOverlayOpen(true)
+                }
                 aria-label={t.viewSkin}
                 title={t.viewSkin}
                 type="button"
@@ -523,77 +753,147 @@ export default function ChampionDetail() {
               <div className="cd-skinStage">
                 <img
                   className={`cd-skinImg cd-skinImg--wide ${
-                    skinLoaded.splash ? "is-loaded" : ""
+                    skinLoaded.splash
+                      ? "is-loaded"
+                      : ""
                   }`}
-                  src={skinSplashUrl || PLACEHOLDER_IMG}
+                  src={
+                    skinSplashUrl ||
+                    PLACEHOLDER_IMG
+                  }
                   alt={skinName}
                   loading="eager"
                   decoding="async"
                   fetchPriority="high"
                   onLoad={() =>
-                    setSkinLoaded((state) => ({ ...state, splash: true }))
+                    setSkinLoaded((state) => ({
+                      ...state,
+                      splash: true,
+                    }))
                   }
                   onError={(event) => {
-                    if (event.currentTarget.dataset.fallback) return;
+                    if (
+                      event.currentTarget.dataset
+                        .fallback
+                    ) {
+                      return;
+                    }
 
-                    event.currentTarget.dataset.fallback = "1";
-                    event.currentTarget.src = safeChamp.splashUrl || PLACEHOLDER_IMG;
+                    event.currentTarget.dataset.fallback =
+                      "1";
+
+                    event.currentTarget.src =
+                      safeChamp.splashUrl ||
+                      PLACEHOLDER_IMG;
                   }}
                 />
 
                 <img
                   className={`cd-skinImg cd-skinImg--tall ${
-                    skinLoaded.loading ? "is-loaded" : ""
+                    skinLoaded.loading
+                      ? "is-loaded"
+                      : ""
                   }`}
-                  src={skinLoadingUrl || skinSplashUrl || PLACEHOLDER_IMG}
+                  src={
+                    skinLoadingUrl ||
+                    skinSplashUrl ||
+                    PLACEHOLDER_IMG
+                  }
                   alt={skinName}
                   loading="eager"
                   decoding="async"
-                  data-skin-index={currentIndex + 1}
+                  data-skin-index={
+                    currentIndex + 1
+                  }
                   onLoad={() =>
-                    setSkinLoaded((state) => ({ ...state, loading: true }))
+                    setSkinLoaded((state) => ({
+                      ...state,
+                      loading: true,
+                    }))
                   }
                   onError={(event) => {
-                    if (event.currentTarget.dataset.fallback) return;
+                    if (
+                      event.currentTarget.dataset
+                        .fallback
+                    ) {
+                      return;
+                    }
 
-                    event.currentTarget.dataset.fallback = "1";
+                    event.currentTarget.dataset.fallback =
+                      "1";
+
                     event.currentTarget.src =
-                      skinSplashUrl || safeChamp.splashUrl || PLACEHOLDER_IMG;
+                      skinSplashUrl ||
+                      safeChamp.splashUrl ||
+                      PLACEHOLDER_IMG;
                   }}
                 />
               </div>
 
-              <div className="cd-skinCaption" title={skinName}>
-                <span className="cd-skinCaptionK">{t.skin}</span>
-                <span className="cd-skinCaptionV">{skinName}</span>
+              <div
+                className="cd-skinCaption"
+                title={skinName}
+              >
+                <span className="cd-skinCaptionK">
+                  {t.skin}
+                </span>
+
+                <span className="cd-skinCaptionV">
+                  {skinName}
+                </span>
               </div>
             </div>
 
             <div className="cd-infoStack">
-              <div className="cd-metaStrip" aria-label={t.metaStrip}>
+              <div
+                className="cd-metaStrip"
+                aria-label={t.metaStrip}
+              >
                 <div className="cd-metaPill">
-                  <span className="cd-metaK">{t.region}</span>
-                  <span className="cd-metaV">{region}</span>
+                  <span className="cd-metaK">
+                    {t.region}
+                  </span>
+
+                  <span className="cd-metaV">
+                    {region}
+                  </span>
                 </div>
 
                 <div className="cd-metaPill">
-                  <span className="cd-metaK">{t.roles}</span>
-                  <span className="cd-metaV">{roles}</span>
+                  <span className="cd-metaK">
+                    {t.roles}
+                  </span>
+
+                  <span className="cd-metaV">
+                    {roles}
+                  </span>
                 </div>
 
                 <div className="cd-metaPill">
-                  <span className="cd-metaK">{t.positions}</span>
-                  <span className="cd-metaV">{positions}</span>
+                  <span className="cd-metaK">
+                    {t.positions}
+                  </span>
+
+                  <span className="cd-metaV">
+                    {positions}
+                  </span>
                 </div>
               </div>
 
               <div className="cd-box">
-                <h2 className="cd-h2">{t.lore}</h2>
-                <p className="cd-p">{lore || t.noLore}</p>
+                <h2 className="cd-h2">
+                  {t.lore}
+                </h2>
+
+                <p className="cd-p">
+                  {lore || t.noLore}
+                </p>
               </div>
 
               <div className="cd-box cd-box--diff">
-                <h2 className="cd-h2">{t.difficulty}</h2>
+                <h2 className="cd-h2">
+                  {t.difficulty}
+                </h2>
 
                 <div className="cd-diffRow">
                   <div
@@ -602,12 +902,34 @@ export default function ChampionDetail() {
                     aria-label={`${t.difficulty}: ${difficulty}/10`}
                     title={`${difficulty}/10`}
                   >
-                    <span className={`cd-diffSeg ${difficultyLevel >= 1 ? "is-on" : ""}`} />
-                    <span className={`cd-diffSeg ${difficultyLevel >= 2 ? "is-on" : ""}`} />
-                    <span className={`cd-diffSeg ${difficultyLevel >= 3 ? "is-on" : ""}`} />
+                    <span
+                      className={`cd-diffSeg ${
+                        difficultyLevel >= 1
+                          ? "is-on"
+                          : ""
+                      }`}
+                    />
+
+                    <span
+                      className={`cd-diffSeg ${
+                        difficultyLevel >= 2
+                          ? "is-on"
+                          : ""
+                      }`}
+                    />
+
+                    <span
+                      className={`cd-diffSeg ${
+                        difficultyLevel >= 3
+                          ? "is-on"
+                          : ""
+                      }`}
+                    />
                   </div>
 
-                  <span className="cd-diffLabel">{difficultyLabel}</span>
+                  <span className="cd-diffLabel">
+                    {difficultyLabel}
+                  </span>
                 </div>
               </div>
             </div>
@@ -616,18 +938,26 @@ export default function ChampionDetail() {
 
         <section className="cd-tipsRow">
           <div className="cd-tipsHead">
-            <h2 className="cd-h2">{t.tips}</h2>
+            <h2 className="cd-h2">
+              {t.tips}
+            </h2>
           </div>
 
           <div className="cd-tipsGrid">
             <div className="cd-tipBox cd-tipBox--ally">
-              <h3 className="cd-h3">{t.allies}</h3>
+              <h3 className="cd-h3">
+                {t.allies}
+              </h3>
 
               <ul className="cd-list">
                 {safeArr(allytips).length ? (
-                  safeArr(allytips).map((tip, index) => (
-                    <li key={`ally-${index}`}>{tip}</li>
-                  ))
+                  safeArr(allytips).map(
+                    (tip, index) => (
+                      <li key={`ally-${index}`}>
+                        {tip}
+                      </li>
+                    )
+                  )
                 ) : (
                   <li>{t.noTips}</li>
                 )}
@@ -635,13 +965,19 @@ export default function ChampionDetail() {
             </div>
 
             <div className="cd-tipBox cd-tipBox--enemy">
-              <h3 className="cd-h3">{t.enemies}</h3>
+              <h3 className="cd-h3">
+                {t.enemies}
+              </h3>
 
               <ul className="cd-list">
                 {safeArr(enemytips).length ? (
-                  safeArr(enemytips).map((tip, index) => (
-                    <li key={`enemy-${index}`}>{tip}</li>
-                  ))
+                  safeArr(enemytips).map(
+                    (tip, index) => (
+                      <li key={`enemy-${index}`}>
+                        {tip}
+                      </li>
+                    )
+                  )
                 ) : (
                   <li>{t.noTips}</li>
                 )}
@@ -651,51 +987,98 @@ export default function ChampionDetail() {
         </section>
 
         <section className="cd-abilitiesBlock">
-          <h2 className="cd-h2">{t.abilities}</h2>
+          <h2 className="cd-h2">
+            {t.abilities}
+          </h2>
 
           <div className="cd-ability">
-            <img className="cd-ico" src={passive?.iconUrl || PLACEHOLDER_IMG} alt="" />
+            <img
+              className="cd-ico"
+              src={
+                passive?.iconUrl ||
+                PLACEHOLDER_IMG
+              }
+              alt=""
+            />
 
             <div className="cd-abilityBody">
               <h3 className="cd-h3">
                 {t.passive}:{" "}
-                <span className="cd-abilityName">{passive?.name || t.noName}</span>
+                <span className="cd-abilityName">
+                  {passive?.name || t.noName}
+                </span>
               </h3>
 
-              <p className="cd-p">{passive?.description || t.noDescription}</p>
+              <p className="cd-p">
+                {passive?.description ||
+                  t.noDescription}
+              </p>
             </div>
           </div>
 
-          {safeArr(spells).map((spell, index) => (
-            <div className="cd-ability" key={`spell-${spell?.key || index}`}>
-              <img className="cd-ico" src={spell.iconUrl || PLACEHOLDER_IMG} alt="" />
+          {safeArr(spells).map(
+            (spell, index) => (
+              <div
+                className="cd-ability"
+                key={`spell-${
+                  spell?.key || index
+                }`}
+              >
+                <img
+                  className="cd-ico"
+                  src={
+                    spell.iconUrl ||
+                    PLACEHOLDER_IMG
+                  }
+                  alt=""
+                />
 
-              <div className="cd-abilityBody">
-                <h3 className="cd-h3">
-                  {["Q", "W", "E", "R"][index]}:{" "}
-                  <span className="cd-abilityName">{spell.name || t.noName}</span>
-                </h3>
+                <div className="cd-abilityBody">
+                  <h3 className="cd-h3">
+                    {["Q", "W", "E", "R"][
+                      index
+                    ]}
+                    :{" "}
+                    <span className="cd-abilityName">
+                      {spell.name || t.noName}
+                    </span>
+                  </h3>
 
-                <p className="cd-p">{spell.description || t.noDescription}</p>
+                  <p className="cd-p">
+                    {spell.description ||
+                      t.noDescription}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          )}
         </section>
 
         <section className="cd-statsBlock">
-          <h2 className="cd-h2">{t.statsTitle}</h2>
+          <h2 className="cd-h2">
+            {t.statsTitle}
+          </h2>
 
           <div className="cd-stats">
-            {Object.entries(stats).map(([key, value]) => (
-              <div
-                className="cd-stat"
-                key={`stat-${key}`}
-                title={`${translateStat(key)}: ${value}`}
-              >
-                <span className="cd-statK">{translateStat(key)}</span>
-                <span className="cd-statV">{value}</span>
-              </div>
-            ))}
+            {Object.entries(stats).map(
+              ([key, value]) => (
+                <div
+                  className="cd-stat"
+                  key={`stat-${key}`}
+                  title={`${translateStat(
+                    key
+                  )}: ${value}`}
+                >
+                  <span className="cd-statK">
+                    {translateStat(key)}
+                  </span>
+
+                  <span className="cd-statV">
+                    {value}
+                  </span>
+                </div>
+              )
+            )}
           </div>
         </section>
       </section>
