@@ -81,6 +81,19 @@ export const en = {
       "© 2026 LoL Hub — All rights reserved.",
   },
 
+  serverLoader: {
+    loading: "Loading",
+    loadingContent: "Loading content",
+    preparing: "We are preparing the information.",
+    serverDelayBefore: "The server may take between",
+    waitTime: "1 and 2 minutes",
+    serverDelayAfter:
+      "to start because it uses a free hosting service.",
+    waitMessage:
+      "Please wait a moment. If loading does not continue, you can reload the page.",
+    reload: "Reload page",
+  },
+
 // Pages
 
   home: {

@@ -49,6 +49,19 @@ export const es = {
     cooldownDesc: "Enfriamiento ↓",
   },
 
+  serverLoader: {
+    loading: "Cargando",
+    loadingContent: "Cargando contenido",
+    preparing: "Estamos preparando la información.",
+    serverDelayBefore: "El servidor puede tardar entre",
+    waitTime: "1 y 2 minutos",
+    serverDelayAfter:
+      "en activarse porque utiliza un alojamiento gratuito.",
+    waitMessage:
+      "Por favor, esperá unos instantes. Si la carga no continúa, podés recargar la página.",
+    reload: "Recargar página",
+  },
+
   footer: {
     brand: "LoL Hub",
 

@@ -2,18 +2,24 @@
 // Loader reutilizable para las páginas que consumen datos del backend.
 
 import { useEffect, useState } from "react";
-
 import {
   FaRedoAlt,
   FaServer,
   FaSpinner,
 } from "react-icons/fa";
 
+import { useLanguage } from "../../context/LanguageContext";
+import { translations } from "../../i18n";
+
 import "./ServerLoader.css";
 
 export function ServerLoader({
-  resource = "contenido",
+  resource = "",
 }) {
+  const { language } = useLanguage();
+
+  const t = translations[language].serverLoader;
+
   const [showServerMessage, setShowServerMessage] =
     useState(false);
 
@@ -29,35 +35,47 @@ export function ServerLoader({
     window.location.reload();
   }
 
+  const loadingTitle = resource
+    ? `${t.loading} ${resource}...`
+    : `${t.loadingContent}...`;
+
   return (
-    <div className="serverLoader">
-      <FaSpinner className="serverLoader__spinner" />
+    <div
+      className="serverLoader"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <FaSpinner
+        className="serverLoader__spinner"
+        aria-hidden="true"
+      />
 
       <h3 className="serverLoader__title">
-        Cargando {resource}...
+        {loadingTitle}
       </h3>
 
       {!showServerMessage && (
         <p className="serverLoader__text">
-          Estamos preparando la información.
+          {t.preparing}
         </p>
       )}
 
       {showServerMessage && (
         <div className="serverLoader__notice">
-          <FaServer className="serverLoader__icon" />
+          <FaServer
+            className="serverLoader__icon"
+            aria-hidden="true"
+          />
 
           <p className="serverLoader__text">
-            El servidor puede tardar entre{" "}
-            <strong>1 y 2 minutos</strong> en
-            activarse porque utiliza un alojamiento
-            gratuito.
+            {t.serverDelayBefore}{" "}
+            <strong>{t.waitTime}</strong>{" "}
+            {t.serverDelayAfter}
           </p>
 
           <p className="serverLoader__text">
-            Por favor, esperá unos instantes. Si la
-            carga no continúa, podés recargar la
-            página.
+            {t.waitMessage}
           </p>
 
           <button
@@ -65,8 +83,9 @@ export function ServerLoader({
             className="serverLoader__button"
             onClick={handleReload}
           >
-            <FaRedoAlt />
-            Recargar página
+            <FaRedoAlt aria-hidden="true" />
+
+            {t.reload}
           </button>
         </div>
       )}
